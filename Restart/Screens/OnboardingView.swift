@@ -13,6 +13,15 @@ struct OnboardingView: View {
 //    To access the previously stored onboarding key value in this file, we have redeclared it the same
     @AppStorage("onboarding") var isOnboardingViewActive: Bool = true
     
+    // Two properties to create drag gesture on the slidable button
+    
+    // establish constraint to the button's horizontal movement. 40+40 = 80 paddings to the leading and trailing
+    @State private var buttonWidth: Double = UIScreen.main.bounds.width - 80  // capsule button width
+    
+    // property to represent offset value in the horizontal direction
+    @State private var buttonOffset: CGFloat = 0
+    
+    
     //MARK: - BODY
     var body: some View {
         ZStack {
@@ -60,6 +69,7 @@ struct OnboardingView: View {
                 
                 //MARK: - FOOTER
                 
+                // custom draggable button
                 ZStack {
                     //PARTS OF THE CUSTOM BUTTON
                     
@@ -80,12 +90,12 @@ struct OnboardingView: View {
                         .fontWeight(.bold)
                         .offset(x: 10)
                     
-                    // 3. CAPSULE (DYNAMIC WIDTH)
+                    // 3. CAPSULE (DYNAMIC WIDTH/DEFORMABLE SHAPE)
                     
                     HStack {
                         Capsule()
                             .fill(Color("ColorRed"))
-                            .frame(width: 80)
+                            .frame(width: buttonOffset + 80)  // to make the back capsue deform its shape by the width of the draggable circle
                       
                         Spacer()
                     }
@@ -108,16 +118,35 @@ struct OnboardingView: View {
                         }
                         .foregroundColor(.white)
                         .frame(width: 80, height: 80, alignment: .center)
-                        .onTapGesture {
-                            isOnboardingViewActive = false
-                        }
+                        .offset(x: buttonOffset)
+                        .gesture(
+                            DragGesture()
+                                .onChanged({ gesture in
+                                    
+                                    // run only when the dragging has been started in the right direction and prevent from going out of the button view
+                                    if gesture.translation.width > 0 && buttonOffset <= (buttonWidth - 80) {
+                                        
+                                        buttonOffset = gesture.translation.width  // capturing actual drag movement width for later use
+                                    }
+                                })
+                                .onEnded({ _ in
+                                    
+                                    if buttonOffset > (buttonWidth / 2) {
+                                        buttonOffset = buttonWidth - 80
+                                        isOnboardingViewActive = false  // switch to home screen
+                                    } else {
+                                        buttonOffset = 0
+                                    }
+                                    
+                                })
+                        )  //: GESTURE
                         
-                        Spacer()  // push to the left
+                        Spacer()  // push draggable circle to the left
                         
                     }
                     
                 } //: FOOTER
-                .frame(height: 80, alignment: .center)
+                .frame(width: buttonWidth, height: 80, alignment: .center)
                 .padding()
           
             } //: VSTACK
