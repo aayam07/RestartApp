@@ -14,6 +14,9 @@ struct HomeView: View {
     // We are not setting the variable value here as false, it is just for safety reasons in case the program doesn't find the onboarding key in its permanent storage
     @AppStorage("onboarding") var isOnboardingViewActive: Bool = false
     
+    // to create repeating animation. this property stores the actual state of animation
+    @State private var isAnimating: Bool = false
+    
     //MARK: - BODY
     var body: some View {
         VStack(spacing: 20) {
@@ -28,7 +31,14 @@ struct HomeView: View {
                 Image("character-2")
                     .resizable()
                     .scaledToFit()
-                .padding()
+                    .padding()
+                    .offset(y: isAnimating ? 35 : -35)
+                    .animation(
+                        Animation
+                            .easeOut(duration: 4)
+                            .repeatForever()
+                            , value: isAnimating
+                    )
             }
             
             
@@ -49,7 +59,11 @@ struct HomeView: View {
             
             Button {
                 //some action
-                isOnboardingViewActive = true
+                DispatchQueue.main.async {
+                    withAnimation {
+                        isOnboardingViewActive = true
+                    }
+                }
             } label: {
                 
                 // no need to use HSTACK in button label as SwiftUI automatically renders two or more components as HSTACK in Button's Label
@@ -65,6 +79,13 @@ struct HomeView: View {
             .buttonBorderShape(.capsule)
             .controlSize(.large)
     
+        } // : VSTACK
+        .onAppear {
+            
+            // schedule an specific task in the main thread of the application
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
+                isAnimating = true
+            })
         }
         
     }
