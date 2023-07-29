@@ -34,6 +34,9 @@ struct OnboardingView: View {
     // to change the text title dynamically when the character image is dragged
     @State private var textTitle: String = "Share."
     
+    // to create a new property that will conform to the HAPTIC feedback generator prototype
+    let hapticFeedback = UINotificationFeedbackGenerator()
+    
     
     //MARK: - BODY
     var body: some View {
@@ -197,10 +200,20 @@ struct OnboardingView: View {
                                         // to provide animation when switching between screens
                                         withAnimation(Animation.easeOut(duration: 0.4)) {
                                             if buttonOffset > (buttonWidth / 2) {
+                                                
+                                                // to create a success type haptic feedback
+                                                hapticFeedback.notificationOccurred(.success)
+                                                
+                                                // to play sound sound while swipping to the home screen
+                                                playSound(sound: "chimeup", type: "mp3")
+                                                
                                                 buttonOffset = buttonWidth - 80
                                                 isOnboardingViewActive = false  // switch to home screen
                                             } else {
+                                                
+                                                hapticFeedback.notificationOccurred(.warning)
                                                 buttonOffset = 0
+                                                
                                             }
                                         }
                                     }
@@ -224,6 +237,7 @@ struct OnboardingView: View {
         .onAppear {
             isAnimating = true
         }
+//        .preferredColorScheme(.dark)  // to apply dark mode to the onboarding view in all cases
     }
 }
 

@@ -61,6 +61,7 @@ struct HomeView: View {
                 //some action
                 DispatchQueue.main.async {
                     withAnimation {
+                        playSound(sound: "success", type: "m4a")
                         isOnboardingViewActive = true
                     }
                 }
