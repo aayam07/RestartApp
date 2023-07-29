@@ -25,6 +25,16 @@ struct OnboardingView: View {
     @State private var isAnimating: Bool = false
     
     
+    // to implement horizontal drag gesture to the illustration image
+    @State private var imageOffset: CGSize = .zero
+    
+    // to control the opacity of arrow indicator symbol during the drag of the image
+    @State private var indicatorOpacity: Double = 1.0
+    
+    // to change the text title dynamically when the character image is dragged
+    @State private var textTitle: String = "Share."
+    
+    
     //MARK: - BODY
     var body: some View {
         ZStack {
@@ -38,10 +48,12 @@ struct OnboardingView: View {
                 
                 VStack(spacing: 0) {
                     
-                    Text("Share.")
+                    Text(textTitle)
                         .font(.system(size: 60))
                         .fontWeight(.heavy)
                         .foregroundColor(.white)
+                        .transition(.opacity)  // to apply smooth transition to view
+                        .id(textTitle)  // to tell the SwiftUI that when the textTitle value is changed, this text view is entirely a different view by providing a new id to the view so that it reconstructs it and applies the opacity transition
                     
                     // Multiline texts using """
                     Text("""
@@ -64,14 +76,57 @@ struct OnboardingView: View {
                 ZStack {
                     
                     CircleGroupView(shapeColor: .white, shapeOpacity: 0.2)
+                        .offset(x: imageOffset.width * -1)  // to move to opposite direction multiply by -1
+                        .blur(radius: abs(imageOffset.width / 5))
+                        .animation(.easeOut(duration: 1), value: imageOffset)
                     
                     Image("character-1")
                         .resizable()
                         .scaledToFit()
                         .opacity(isAnimating ? 1 : 0)
                         .animation(.easeOut(duration: 0.5), value: isAnimating)
+                        .offset(x: imageOffset.width * 1.2, y: 0)
+                        .rotationEffect(.degrees(Double(imageOffset.width / 20)))  // rotate by dynamic value
+                        .gesture(
+                          DragGesture()
+                            .onChanged({ gesture in
+                                if abs(imageOffset.width) <= 150 {
+                                    imageOffset = gesture.translation  // provides necessary information about the total movement from the start of the drag gesture to the current event of the drag gesture
+                                    
+                                    // to hide the arrow symbol when the image is dragged
+                                    withAnimation(.linear(duration: 0.25)) {
+                                        indicatorOpacity = 0
+                                        textTitle = "Give."
+                                    }
+                                }
+                            })
+                            .onEnded({ _ in
+//                                withAnimation {
+//                                    imageOffset = .zero
+//                                }
+                                imageOffset = .zero
+                                
+                                // to make the arrow symbol visible when the image is back to the center, after the dragging has stop
+                                withAnimation(.linear(duration: 0.25)) {
+                                    indicatorOpacity = 1
+                                    textTitle = "Share."
+                                }
+                            })
+                        )  //: GESTURE
+                        .animation(.easeOut(duration: 1), value: imageOffset)
+                    
                     
                 } //: CENTER
+                .overlay(
+                    Image(systemName: "arrow.left.and.right.circle")
+                        .font(.system(size: 44, weight: .ultraLight))
+                        .foregroundColor(.white)
+                        .offset(y: 20)
+                        .opacity(isAnimating ? 1 : 0)
+                        .animation(.easeOut(duration: 1).delay(2), value: isAnimating)
+                        .opacity(indicatorOpacity)
+                    , alignment: .bottom
+                )
                 
                 Spacer()
                 
