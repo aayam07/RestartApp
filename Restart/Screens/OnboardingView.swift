@@ -61,7 +61,7 @@ struct OnboardingView: View {
                     // Multiline texts using """
                     Text("""
                     It's not how much we give but
-                    much love we put into giving.
+                    how much love we put into giving.
                     """)
                     .font(.title3)
                     .fontWeight(.light)
